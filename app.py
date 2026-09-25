@@ -28,9 +28,7 @@ def obtener_tasa_bcv():
         pass
     return None
 
-
 def obtener_tasa_criptoya(fiat):
-    # Respaldo ultrarrápido vía API para evitar bloqueos en servidores en la nube
     try:
         url = f"https://criptoya.com/api/binancep2p/usdt/{fiat.lower()}/5"
         resp = requests.get(url, timeout=6)
@@ -43,7 +41,6 @@ def obtener_tasa_criptoya(fiat):
         pass
     return None
 
-
 def obtener_tasa_selenium(moneda="VES", tipo="SELL", rango_min=10, rango_max=3000):
     options = Options()
     options.add_argument("--headless=new")
@@ -55,12 +52,10 @@ def obtener_tasa_selenium(moneda="VES", tipo="SELL", rango_min=10, rango_max=300
 
     driver = None
     try:
-        # Intentar inicialización automática
         try:
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=options)
         except Exception:
-            # Ruta directa para el paquete chromium en Streamlit Cloud / Linux
             options.binary_location = "/usr/bin/chromium"
             driver = webdriver.Chrome(options=options)
 
@@ -77,8 +72,7 @@ def obtener_tasa_selenium(moneda="VES", tipo="SELL", rango_min=10, rango_max=300
                 val = float(texto)
                 if rango_min <= val <= rango_max:
                     precios.append(val)
-                    if len(precios) == 5:
-                        break
+                    if len(precios) == 5: break
             except ValueError:
                 continue
 
@@ -92,16 +86,12 @@ def obtener_tasa_selenium(moneda="VES", tipo="SELL", rango_min=10, rango_max=300
 
     return None
 
-
 @st.cache_data(ttl=600)
 def cargar_datos_completos():
     tasa_bcv = obtener_tasa_bcv()
-    
-    # 1. Intentar Selenium
     tasa_ves = obtener_tasa_selenium("VES", "SELL", 10, 3000)
     tasa_clp = obtener_tasa_selenium("CLP", "BUY", 500, 2000)
 
-    # 2. Respaldo vía API si Selenium es bloqueado en la IP del servidor de la nube
     if not tasa_ves:
         tasa_ves = obtener_tasa_criptoya("VES")
     if not tasa_clp:
@@ -127,32 +117,67 @@ col3.metric("🇨🇱 Binance CLP", f"${tasa_clp:,.0f} CLP" if tasa_clp else "N/
 
 st.divider()
 
+# --- CALCULADORA BIDIRECCIONAL ---
 st.subheader("🧮 Calculadora de Montos Personal")
-monto_usd = st.number_input("Ingresa el monto en Dólares/USDT ($):", min_value=1.0, value=100.0, step=10.0)
 
-col_a, col_b, col_c = st.columns(3)
+tab1, tab2 = st.tabs(["💵 De USD/USDT ➔ Moneda Local", "🔀 De Moneda Local ➔ USD/USDT"])
 
-with col_a:
-    st.markdown("#### 🏛️ Bolívares (BCV)")
-    if tasa_bcv:
-        st.success(f"**{monto_usd * tasa_bcv:,.2f} VES**")
-        st.caption(f"Tasa: {tasa_bcv:,.2f}")
-    else:
-        st.error("Sin datos")
+# OPCIÓN 1: USD -> VES / CLP
+with tab1:
+    monto_usd = st.number_input("Ingresa el monto en Dólares/USDT ($):", min_value=1.0, value=100.0, step=10.0, key="usd_to_fiat")
+    
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown("#### 🏛️ Bolívares (BCV)")
+        if tasa_bcv:
+            st.success(f"**{monto_usd * tasa_bcv:,.2f} VES**")
+            st.caption(f"Tasa: {tasa_bcv:,.2f}")
+        else: st.error("Sin datos")
 
-with col_b:
-    st.markdown("#### 🟡 Bolívares (Binance)")
-    if tasa_ves:
-        st.info(f"**{monto_usd * tasa_ves:,.2f} VES**")
-        st.caption(f"Tasa: {tasa_ves:,.2f}")
-    else:
-        st.error("Sin datos")
+    with col_b:
+        st.markdown("#### 🟡 Bolívares (Binance)")
+        if tasa_ves:
+            st.info(f"**{monto_usd * tasa_ves:,.2f} VES**")
+            st.caption(f"Tasa: {tasa_ves:,.2f}")
+        else: st.error("Sin datos")
 
-with col_c:
-    st.markdown("#### 🇨🇱 Pesos Chilenos (CLP)")
-    if tasa_clp:
-        st.warning(f"**${monto_usd * tasa_clp:,.0f} CLP**")
-        st.caption(f"Tasa: ${tasa_clp:,.2f}")
-    else:
-        st.error("Sin datos")
+    with col_c:
+        st.markdown("#### 🇨🇱 Pesos Chilenos (CLP)")
+        if tasa_clp:
+            st.warning(f"**${monto_usd * tasa_clp:,.0f} CLP**")
+            st.caption(f"Tasa: ${tasa_clp:,.2f}")
+        else: st.error("Sin datos")
 
+# OPCIÓN 2: VES / CLP -> USD
+with tab2:
+    tipo_moneda = st.radio("Selecciona la moneda que tienes:", ["Bolívares (VES)", "Pesos Chilenos (CLP)"], horizontal=True)
+    
+    if tipo_moneda == "Bolívares (VES)":
+        monto_local = st.number_input("Ingresa el monto en Bolívares (VES):", min_value=1.0, value=1000.0, step=100.0, key="ves_to_usd")
+        
+        col_x, col_y = st.columns(2)
+        with col_x:
+            st.markdown("#### 🏛️ A Tasa BCV Oficial")
+            if tasa_bcv:
+                usd_bcv = monto_local / tasa_bcv
+                st.success(f"**${usd_bcv:,.2f} USD**")
+                st.caption(f"Tasa: {tasa_bcv:,.2f} VES/USD")
+            else: st.error("Sin datos")
+            
+        with col_y:
+            st.markdown("#### 🟡 A Tasa Binance P2P")
+            if tasa_ves:
+                usd_ves = monto_local / tasa_ves
+                st.info(f"**${usd_ves:,.2f} USDT**")
+                st.caption(f"Tasa: {tasa_ves:,.2f} VES/USDT")
+            else: st.error("Sin datos")
+            
+    else: # Pesos Chilenos (CLP)
+        monto_clp = st.number_input("Ingresa el monto en Pesos Chilenos (CLP):", min_value=100.0, value=100000.0, step=5000.0, key="clp_to_usd")
+        
+        st.markdown("#### 🇨🇱 Compras en Binance P2P")
+        if tasa_clp:
+            usd_clp = monto_clp / tasa_clp
+            st.warning(f"**${usd_clp:,.2f} USDT**")
+            st.caption(f"Tasa: ${tasa_clp:,.2f} CLP/USDT")
+        else: st.error("Sin datos")
