@@ -39,15 +39,18 @@ tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
 
-# Función para dar formato venezolano: 1.234,56
+# Formato venezolano: 1.234,56
 def fmt_ve(val):
-    if val is None:
+    if val is None or val == 0:
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 # --- ESTILOS CSS ---
 st.markdown("""
     <style>
+    .stApp {
+        background-color: #FFFFFF;
+    }
     .brand-title {
         text-align: center;
         font-weight: 800;
@@ -57,13 +60,13 @@ st.markdown("""
     }
     .date-badge {
         text-align: center;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #2B6CB0;
         background-color: #EBF8FF;
         border: 1px solid #BEE3F8;
         border-radius: 8px;
-        padding: 6px 12px;
-        margin: 10px auto 15px auto;
+        padding: 5px 10px;
+        margin: 5px auto 15px auto;
         width: fit-content;
         font-weight: 600;
     }
@@ -73,6 +76,11 @@ st.markdown("""
         font-weight: 600;
         color: #4A5568;
         margin-bottom: 20px;
+    }
+    /* Estilo del selector de moneda tipo botones */
+    div[data-testid="stRadio"] > div {
+        justify-content: center;
+        gap: 10px;
     }
     .version-footer {
         text-align: center;
@@ -87,114 +95,89 @@ st.markdown("<div class='brand-title'>⚡ TasaYa</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 {fecha_valor}</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='big-rates'>💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; 💶 EUR: <b>{fmt_ve(tasa_euro)} Bs</b></div>", unsafe_allow_html=True)
 
-# Callback para limpiar campos de dólares
-def limpiar_usd():
-    st.session_state["val_usd"] = 0.0
-    st.session_state["val_bs_u"] = 0.0
+# Función para reiniciar campos al cambiar de moneda
+def reset_campos():
+    st.session_state["val_ext"] = 0.0
+    st.session_state["val_bs"] = 0.0
 
-# Callback para limpiar campos de euros
-def limpiar_eur():
-    st.session_state["val_eur"] = 0.0
-    st.session_state["val_bs_e"] = 0.0
+# Selector principal de moneda
+moneda = st.radio(
+    "",
+    ["💵 Dólares ($)", "💶 Euros (€)"],
+    horizontal=True,
+    key="moneda_sel",
+    on_change=reset_campos,
+    label_visibility="collapsed"
+)
 
-# Callback de conversión automática
-def update_u_from_usd():
-    st.session_state["val_bs_u"] = round(st.session_state["val_usd"] * tasa_dolar, 2)
+tasa_actual = tasa_dolar if "Dólares" in moneda else tasa_euro
+simbolo = "$" if "Dólares" in moneda else "€"
 
-def update_u_from_bs():
-    st.session_state["val_usd"] = round(st.session_state["val_bs_u"] / tasa_dolar, 2) if tasa_dolar else 0.0
+# Callbacks de sincronización bidireccional
+def update_from_ext():
+    m = st.session_state.get("val_ext", 0.0)
+    st.session_state["val_bs"] = round(m * tasa_actual, 2)
 
-def update_e_from_eur():
-    st.session_state["val_bs_e"] = round(st.session_state["val_eur"] * tasa_euro, 2)
+def update_from_bs():
+    m = st.session_state.get("val_bs", 0.0)
+    st.session_state["val_ext"] = round(m / tasa_actual, 2) if tasa_actual else 0.0
 
-def update_e_from_bs():
-    st.session_state["val_eur"] = round(st.session_state["val_bs_e"] / tasa_euro, 2) if tasa_euro else 0.0
+def limpiar_todo():
+    st.session_state["val_ext"] = 0.0
+    st.session_state["val_bs"] = 0.0
 
-# PESTAÑAS PRINCIPALES
-tab_usd, tab_eur = st.tabs(["💵 Dólares ($)", "💶 Euros (€)"])
+st.write("")
 
-# ==================== PESTAÑA DÓLARES ====================
-with tab_usd:
+# CAMPOS DE ENTRADA
+col1, col2 = st.columns([1, 4])
+with col1:
+    st.markdown(f"### {simbolo}")
+with col2:
+    st.number_input(
+        f"Monto {simbolo}",
+        min_value=0.0,
+        key="val_ext",
+        on_change=update_from_ext,
+        format="%.2f",
+        label_visibility="collapsed"
+    )
+
+col3, col4 = st.columns([1, 4])
+with col3:
+    st.markdown("### Bs")
+with col4:
+    st.number_input(
+        "Monto Bs",
+        min_value=0.0,
+        key="val_bs",
+        on_change=update_from_bs,
+        format="%.2f",
+        label_visibility="collapsed"
+    )
+
+col_btn, _ = st.columns([2, 3])
+with col_btn:
+    st.button("🧹 Limpiar", key="btn_clean", on_click=limpiar_todo)
+
+# CAMPO COPIABLE DESTACADO
+m_ext = st.session_state.get("val_ext", 0.0)
+m_bs = st.session_state.get("val_bs", 0.0)
+
+if m_bs > 0 or m_ext > 0:
     st.write("")
-    col_u1, col_u2 = st.columns([1, 4])
-    with col_u1:
-        st.markdown("### $")
-    with col_u2:
-        st.number_input(
-            "Monto $",
-            min_value=0.0,
-            key="val_usd",
-            on_change=update_u_from_usd,
-            format="%.2f",
-            label_visibility="collapsed"
-        )
+    st.markdown("##### 📋 Resultado para copiar:")
+    texto_copiar = f"{fmt_ve(m_bs)} Bs ({simbolo}{fmt_ve(m_ext)})"
+    st.code(texto_copiar, language=None)
 
-    col_u3, col_u4 = st.columns([1, 4])
-    with col_u3:
-        st.markdown("### Bs")
-    with col_u4:
-        st.number_input(
-            "Monto Bs",
-            min_value=0.0,
-            key="val_bs_u",
-            on_change=update_u_from_bs,
-            format="%.2f",
-            label_visibility="collapsed"
-        )
+st.write("---")
 
-    col_btn_u, _ = st.columns([2, 3])
-    with col_btn_u:
-        st.button("🧹 Limpiar", key="btn_clean_u", on_click=limpiar_usd)
+# TABLA DE CAMBIOS RÁPIDOS
+st.subheader(f"📊 Tabla de Cambios Rápidos ({simbolo})")
+cantidades = [1, 5, 10, 15, 20, 30, 50, 100]
+df_tabla = pd.DataFrame({
+    f"Monto ({simbolo})": [f"{simbolo}{c},00" for c in cantidades],
+    "Equivalente en Bolívares (Bs)": [f"{fmt_ve(c * tasa_actual)} Bs" for c in cantidades]
+})
+st.table(df_tabla)
 
-    st.write("---")
-    st.subheader("📊 Tabla de Cambios Rápidos ($ USD)")
-    cantidades = [1, 5, 10, 15, 20, 30, 50, 100]
-    df_usd = pd.DataFrame({
-        "Monto ($)": [f"${c},00" for c in cantidades],
-        "Equivalente en Bolívares (Bs)": [f"{fmt_ve(c * tasa_dolar)} Bs" for c in cantidades]
-    })
-    st.table(df_usd)
-
-# ==================== PESTAÑA EUROS ====================
-with tab_eur:
-    st.write("")
-    col_e1, col_e2 = st.columns([1, 4])
-    with col_e1:
-        st.markdown("### €")
-    with col_e2:
-        st.number_input(
-            "Monto €",
-            min_value=0.0,
-            key="val_eur",
-            on_change=update_e_from_eur,
-            format="%.2f",
-            label_visibility="collapsed"
-        )
-
-    col_e3, col_e4 = st.columns([1, 4])
-    with col_e3:
-        st.markdown("### Bs")
-    with col_e4:
-        st.number_input(
-            "Monto Bs",
-            min_value=0.0,
-            key="val_bs_e",
-            on_change=update_e_from_bs,
-            format="%.2f",
-            label_visibility="collapsed"
-        )
-
-    col_btn_e, _ = st.columns([2, 3])
-    with col_btn_e:
-        st.button("🧹 Limpiar", key="btn_clean_e", on_click=limpiar_eur)
-
-    st.write("---")
-    st.subheader("📊 Tabla de Cambios Rápidos (€ EUR)")
-    cantidades = [1, 5, 10, 15, 20, 30, 50, 100]
-    df_eur = pd.DataFrame({
-        "Monto (€)": [f"€{c},00" for c in cantidades],
-        "Equivalente en Bolívares (Bs)": [f"{fmt_ve(c * tasa_euro)} Bs" for c in cantidades]
-    })
-    st.table(df_eur)
-
-st.markdown("<div class='version-footer'>Versión v1.3.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v1.4.0</div>", unsafe_allow_html=True)
