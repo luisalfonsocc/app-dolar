@@ -3,6 +3,7 @@ import os
 import requests
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TasaYa", page_icon="⚡", layout="centered")
 
@@ -45,6 +46,16 @@ def fmt_ve(val):
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+# Script JS para copiar al portapapeles
+def copiar_al_portapapeles(texto, mensaje="Copiado!"):
+    js_code = f"""
+    <script>
+    navigator.clipboard.writeText("{texto}");
+    </script>
+    """
+    components.html(js_code, height=0, width=0)
+    st.toast(f"📋 {mensaje}", icon="✅")
+
 # --- ESTILOS CSS ---
 st.markdown("""
     <style>
@@ -77,7 +88,6 @@ st.markdown("""
         color: #4A5568;
         margin-bottom: 20px;
     }
-    /* Estilo del selector de moneda tipo botones */
     div[data-testid="stRadio"] > div {
         justify-content: center;
         gap: 10px;
@@ -113,7 +123,7 @@ moneda = st.radio(
 tasa_actual = tasa_dolar if "Dólares" in moneda else tasa_euro
 simbolo = "$" if "Dólares" in moneda else "€"
 
-# Callbacks de sincronización bidireccional
+# Callbacks de sincronización
 def update_from_ext():
     m = st.session_state.get("val_ext", 0.0)
     st.session_state["val_bs"] = round(m * tasa_actual, 2)
@@ -128,11 +138,11 @@ def limpiar_todo():
 
 st.write("")
 
-# CAMPOS DE ENTRADA
-col1, col2 = st.columns([1, 4])
-with col1:
+# CAMPOS CON BOTONES DE COPIA INTEGRADOS
+col_ext_label, col_ext_input, col_ext_copy = st.columns([1, 4, 1])
+with col_ext_label:
     st.markdown(f"### {simbolo}")
-with col2:
+with col_ext_input:
     st.number_input(
         f"Monto {simbolo}",
         min_value=0.0,
@@ -141,11 +151,15 @@ with col2:
         format="%.2f",
         label_visibility="collapsed"
     )
+with col_ext_copy:
+    if st.button("📋", key="copy_ext", help=f"Copiar monto en {simbolo}"):
+        m_ext = st.session_state.get("val_ext", 0.0)
+        copiar_al_portapapeles(f"{simbolo}{fmt_ve(m_ext)}", f"Copiado {simbolo}{fmt_ve(m_ext)}")
 
-col3, col4 = st.columns([1, 4])
-with col3:
+col_bs_label, col_bs_input, col_bs_copy = st.columns([1, 4, 1])
+with col_bs_label:
     st.markdown("### Bs")
-with col4:
+with col_bs_input:
     st.number_input(
         "Monto Bs",
         min_value=0.0,
@@ -154,20 +168,15 @@ with col4:
         format="%.2f",
         label_visibility="collapsed"
     )
+with col_bs_copy:
+    if st.button("📋", key="copy_bs", help="Copiar monto en Bolívares"):
+        m_bs = st.session_state.get("val_bs", 0.0)
+        copiar_al_portapapeles(f"{fmt_ve(m_bs)} Bs", f"Copiado {fmt_ve(m_bs)} Bs")
 
+# Botón Limpiar
 col_btn, _ = st.columns([2, 3])
 with col_btn:
     st.button("🧹 Limpiar", key="btn_clean", on_click=limpiar_todo)
-
-# CAMPO COPIABLE DESTACADO
-m_ext = st.session_state.get("val_ext", 0.0)
-m_bs = st.session_state.get("val_bs", 0.0)
-
-if m_bs > 0 or m_ext > 0:
-    st.write("")
-    st.markdown("##### 📋 Resultado para copiar:")
-    texto_copiar = f"{fmt_ve(m_bs)} Bs ({simbolo}{fmt_ve(m_ext)})"
-    st.code(texto_copiar, language=None)
 
 st.write("---")
 
@@ -180,4 +189,4 @@ df_tabla = pd.DataFrame({
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v1.4.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v1.5.0</div>", unsafe_allow_html=True)
