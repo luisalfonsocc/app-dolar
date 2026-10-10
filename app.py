@@ -30,15 +30,28 @@ def cargar_tasas():
         d_val = float(d_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if d_elem else 876.80
         e_val = float(e_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if e_elem else 982.00
         f_val = f_elem.text.strip() if f_elem else "Fecha Oficial BCV"
-        return {"bcv_dolar": d_val, "bcv_euro": e_val, "fecha_valor": f_val, "usdt_ref": 1000.00}
+        return {
+            "bcv_dolar": d_val, 
+            "bcv_euro": e_val, 
+            "fecha_valor": f_val, 
+            "usdt_ref": 1000.00,
+            "usdt_fecha_hora": "Reciente"
+        }
     except Exception:
-        return {"bcv_dolar": 876.80, "bcv_euro": 982.00, "fecha_valor": "Fecha Oficial BCV", "usdt_ref": 1000.00}
+        return {
+            "bcv_dolar": 876.80, 
+            "bcv_euro": 982.00, 
+            "fecha_valor": "Fecha Oficial BCV", 
+            "usdt_ref": 1000.00,
+            "usdt_fecha_hora": "Reciente"
+        }
 
 datos = cargar_tasas()
 tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
 tasa_usdt = datos.get("usdt_ref", 1000.00)
+usdt_fecha_hora = datos.get("usdt_fecha_hora", "Hoy")
 
 def fmt_ve(val):
     if val is None or val == 0:
@@ -240,9 +253,15 @@ with col_b_cp:
 if val_bs_actual > 0:
     st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
     
-    # REFERENCIA EN USDT
+    # REFERENCIA EN USDT CON FECHA Y HORA
     usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
-    st.markdown(f"<div class='usdt-ref-box'>🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref. {fmt_ve(tasa_usdt)} Bs/USDT)</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='usdt-ref-box'>"
+        f"🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b><br>"
+        f"<small>Ref: {fmt_ve(tasa_usdt)} Bs/USDT (Actualizado: {usdt_fecha_hora})</small>"
+        f"</div>", 
+        unsafe_allow_html=True
+    )
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -267,4 +286,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.7.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.8.0</div>", unsafe_allow_html=True)
