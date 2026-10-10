@@ -40,21 +40,45 @@ tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
 
-# Formato venezolano: 1.234,56
+# Formato venezolano con separador de miles por punto y decimales por coma: 1.234.567,89
 def fmt_ve(val):
     if val is None or val == 0:
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# Script JS para copiar al portapapeles
-def copiar_al_portapapeles(texto, mensaje="Copiado!"):
-    js_code = f"""
+# Componente HTML/JS real para copiar directamente al portapapeles
+def boton_copiar_js(texto, key):
+    html_code = f"""
+    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+        <button id="btn_{key}" onclick="copiar_{key}()" style="
+            background-color: #EDF2F7;
+            border: 1px solid #CBD5E0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        ">📋 Copiar</button>
+    </div>
     <script>
-    navigator.clipboard.writeText("{texto}");
+    function copiar_{key}() {{
+        var text = "{texto}";
+        navigator.clipboard.writeText(text).then(function() {{
+            var btn = document.getElementById("btn_{key}");
+            btn.innerText = "✅ ¡Copiado!";
+            btn.style.backgroundColor = "#C6F6D5";
+            setTimeout(function() {{
+                btn.innerText = "📋 Copiar";
+                btn.style.backgroundColor = "#EDF2F7";
+            }}, 2000);
+        }}).catch(function(err) {{
+            alert("No se pudo copiar automáticamente: " + text);
+        }});
+    }}
     </script>
     """
-    components.html(js_code, height=0, width=0)
-    st.toast(f"📋 {mensaje}", icon="✅")
+    components.html(html_code, height=45)
 
 # --- ESTILOS CSS ---
 st.markdown("""
@@ -88,6 +112,16 @@ st.markdown("""
         color: #4A5568;
         margin-bottom: 20px;
     }
+    .formatted-display {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2D3748;
+        background-color: #F7FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 4px;
+    }
     div[data-testid="stRadio"] > div {
         justify-content: center;
         gap: 10px;
@@ -110,7 +144,7 @@ def reset_campos():
     st.session_state["val_ext"] = 0.0
     st.session_state["val_bs"] = 0.0
 
-# Selector principal de moneda
+# Selector principal
 moneda = st.radio(
     "",
     ["💵 Dólares ($)", "💶 Euros (€)"],
@@ -138,8 +172,8 @@ def limpiar_todo():
 
 st.write("")
 
-# CAMPOS CON BOTONES DE COPIA INTEGRADOS
-col_ext_label, col_ext_input, col_ext_copy = st.columns([1, 4, 1])
+# MONTO EXTRANJERO
+col_ext_label, col_ext_input, col_ext_copy = st.columns([1, 4, 2])
 with col_ext_label:
     st.markdown(f"### {simbolo}")
 with col_ext_input:
@@ -151,12 +185,17 @@ with col_ext_input:
         format="%.2f",
         label_visibility="collapsed"
     )
+    val_ext_actual = st.session_state.get("val_ext", 0.0)
+    st.markdown(f"<div class='formatted-display'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
 with col_ext_copy:
-    if st.button("📋", key="copy_ext", help=f"Copiar monto en {simbolo}"):
-        m_ext = st.session_state.get("val_ext", 0.0)
-        copiar_al_portapapeles(f"{simbolo}{fmt_ve(m_ext)}", f"Copiado {simbolo}{fmt_ve(m_ext)}")
+    st.write("")
+    st.write("")
+    boton_copiar_js(f"{simbolo}{fmt_ve(val_ext_actual)}", "ext")
 
-col_bs_label, col_bs_input, col_bs_copy = st.columns([1, 4, 1])
+st.write("")
+
+# MONTO BOLÍVARES
+col_bs_label, col_bs_input, col_bs_copy = st.columns([1, 4, 2])
 with col_bs_label:
     st.markdown("### Bs")
 with col_bs_input:
@@ -168,14 +207,17 @@ with col_bs_input:
         format="%.2f",
         label_visibility="collapsed"
     )
+    val_bs_actual = st.session_state.get("val_bs", 0.0)
+    st.markdown(f"<div class='formatted-display'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
 with col_bs_copy:
-    if st.button("📋", key="copy_bs", help="Copiar monto en Bolívares"):
-        m_bs = st.session_state.get("val_bs", 0.0)
-        copiar_al_portapapeles(f"{fmt_ve(m_bs)} Bs", f"Copiado {fmt_ve(m_bs)} Bs")
+    st.write("")
+    st.write("")
+    boton_copiar_js(f"{fmt_ve(val_bs_actual)} Bs", "bs")
 
 # Botón Limpiar
 col_btn, _ = st.columns([2, 3])
 with col_btn:
+    st.write("")
     st.button("🧹 Limpiar", key="btn_clean", on_click=limpiar_todo)
 
 st.write("---")
@@ -189,4 +231,4 @@ df_tabla = pd.DataFrame({
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v1.5.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v1.6.0</div>", unsafe_allow_html=True)
