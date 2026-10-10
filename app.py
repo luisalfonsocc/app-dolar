@@ -34,7 +34,7 @@ def cargar_tasas():
             "bcv_dolar": d_val, 
             "bcv_euro": e_val, 
             "fecha_valor": f_val, 
-            "usdt_ref": 1000.00,
+            "usdt_ref": 1016.45,
             "usdt_fecha_hora": "Reciente"
         }
     except Exception:
@@ -42,7 +42,7 @@ def cargar_tasas():
             "bcv_dolar": 876.80, 
             "bcv_euro": 982.00, 
             "fecha_valor": "Fecha Oficial BCV", 
-            "usdt_ref": 1000.00,
+            "usdt_ref": 1016.45,
             "usdt_fecha_hora": "Reciente"
         }
 
@@ -50,7 +50,7 @@ datos = cargar_tasas()
 tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
-tasa_usdt = datos.get("usdt_ref", 1000.00)
+tasa_usdt = datos.get("usdt_ref", 1016.45)
 usdt_fecha_hora = datos.get("usdt_fecha_hora", "Hoy")
 
 def fmt_ve(val):
@@ -58,13 +58,19 @@ def fmt_ve(val):
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# --- ESTILOS CSS ANTI-DARK MODE ---
+# --- ESTILOS CSS LIMPIOS ANTI-DARK MODE (SIN CAJAS FANTASMA) ---
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"], .stApp {
         background-color: #FFFFFF !important;
         color: #1A202C !important;
     }
+
+    /* Ocultar elementos vacios o contenedores HTML residuales */
+    .element-container:empty {
+        display: none !important;
+    }
+
     .brand-title {
         text-align: center;
         font-weight: 900;
@@ -100,7 +106,7 @@ st.markdown("""
         font-size: 0.95rem;
         font-weight: 700;
         color: #334155 !important;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
     .usdt-time-header {
         text-align: center;
@@ -109,39 +115,37 @@ st.markdown("""
         font-weight: 600;
         margin-bottom: 18px;
     }
-    .calc-card {
-        background-color: #F8FAFC !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 12px;
-    }
     .card-label {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         font-weight: 800;
         color: #1E293B !important;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        margin-top: 10px;
     }
     .preview-box {
-        background-color: #334155 !important;
+        background-color: #1E293B !important;
         color: #FFFFFF !important;
         font-size: 1.15rem;
         font-weight: 800;
-        padding: 8px 12px;
+        padding: 8px 14px;
         border-radius: 8px;
-        margin-top: 8px;
+        margin-top: 6px;
+        margin-bottom: 12px;
         display: inline-block;
     }
     .usdt-ref-box {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         color: #047857 !important;
         background-color: #ECFDF5 !important;
         border: 1px solid #A7F3D0 !important;
         border-radius: 8px;
-        padding: 6px 10px;
-        margin-top: 8px;
+        padding: 8px 12px;
+        margin-top: 6px;
+        margin-bottom: 12px;
         font-weight: 600;
     }
+
+    /* Estilos para Tablas */
     div[data-testid="stTable"] table {
         color: #0F172A !important;
         background-color: #FFFFFF !important;
@@ -212,15 +216,11 @@ def limpiar_todo():
     st.session_state["val_ext"] = 0.0
     st.session_state["val_bs"] = 0.0
 
-st.write("")
-
 val_ext_actual = st.session_state.get("val_ext", 0.0)
 val_bs_actual = st.session_state.get("val_bs", 0.0)
 
-# MONEDA EXTRANJERA
-st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
+# BLOQUE MONEDA EXTRANJERA ($ / €)
 st.markdown(f"<div class='card-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
-
 col_e_in, col_e_cp = st.columns([4, 1])
 with col_e_in:
     st.number_input(
@@ -238,12 +238,8 @@ with col_e_cp:
 if val_ext_actual > 0:
     st.markdown(f"<div class='preview-box'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
-
-# BOLÍVARES
-st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
+# BLOQUE BOLÍVARES (Bs)
 st.markdown("<div class='card-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
-
 col_b_in, col_b_cp = st.columns([4, 1])
 with col_b_in:
     st.number_input(
@@ -270,7 +266,7 @@ if val_bs_actual > 0:
         unsafe_allow_html=True
     )
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.write("")
 
 # BOTÓN LIMPIAR
 st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, use_container_width=True)
@@ -293,4 +289,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.9.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v3.0.0</div>", unsafe_allow_html=True)
