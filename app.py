@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="TasaYa", page_icon="⚡", layout="centered")
+st.set_page_config(page_title="CuentasClaras", page_icon="🤝", layout="centered")
 
 def cargar_tasas():
     if os.path.exists("tasas.json"):
@@ -57,11 +57,18 @@ st.markdown("""
         font-weight: 900;
         font-size: 2.3rem;
         color: #0F172A !important;
-        margin-bottom: 2px;
+        margin-bottom: 0px;
         letter-spacing: -0.5px;
     }
     .brand-title span {
         color: #2563EB !important;
+    }
+    .brand-tagline {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #64748B !important;
+        font-weight: 600;
+        margin-bottom: 6px;
     }
     .date-badge {
         text-align: center;
@@ -71,7 +78,7 @@ st.markdown("""
         border: 1px solid #BFDBFE !important;
         border-radius: 8px;
         padding: 5px 12px;
-        margin: 6px auto 14px auto;
+        margin: 4px auto 14px auto;
         width: fit-content;
         font-weight: 700;
     }
@@ -141,8 +148,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ENCABEZADO CON NOMBRE COOL Y FECHA TASA BCV
-st.markdown("<div class='brand-title'>⚡ Tasa<span>Ya</span></div>", unsafe_allow_html=True)
+# ENCABEZADO "CUENTAS CLARAS" CON EMOJIS DE APRETON DE MANOS Y RAYO
+st.markdown("<div class='brand-title'>🤝 Cuentas<span>Claras</span> ⚡</div>", unsafe_allow_html=True)
+st.markdown("<div class='brand-tagline'>Calculadora Rápida • Sin Publicidad</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 Fecha Tasa BCV: <b>{fecha_valor}</b></div>", unsafe_allow_html=True)
 
 # TASAS SUPERIORES DESTACADAS
@@ -232,7 +240,7 @@ with col_b_cp:
 if val_bs_actual > 0:
     st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
     
-    # REFERENCIA EN USDT (INFO ADICIONAL)
+    # REFERENCIA EN USDT
     usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
     st.markdown(f"<div class='usdt-ref-box'>🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref. {fmt_ve(tasa_usdt)} Bs/USDT)</div>", unsafe_allow_html=True)
 
@@ -259,4 +267,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.3.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.6.0</div>", unsafe_allow_html=True)
