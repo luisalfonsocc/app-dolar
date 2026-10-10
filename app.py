@@ -40,47 +40,48 @@ tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
 
-# Formato venezolano con separador de miles por punto y decimales por coma: 1.234.567,89
 def fmt_ve(val):
     if val is None or val == 0:
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# Componente HTML/JS real para copiar directamente al portapapeles
-def boton_copiar_js(texto, key):
+def boton_copiar_js(texto_solo_numero, key):
     html_code = f"""
-    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding-top: 2px;">
         <button id="btn_{key}" onclick="copiar_{key}()" style="
-            background-color: #EDF2F7;
-            border: 1px solid #CBD5E0;
-            border-radius: 8px;
-            padding: 8px 12px;
+            background-color: #F7FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 9px 12px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
             width: 100%;
-        ">📋 Copiar</button>
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">📋</button>
     </div>
     <script>
     function copiar_{key}() {{
-        var text = "{texto}";
+        var text = "{texto_solo_numero}";
         navigator.clipboard.writeText(text).then(function() {{
             var btn = document.getElementById("btn_{key}");
-            btn.innerText = "✅ ¡Copiado!";
+            btn.innerText = "✅";
             btn.style.backgroundColor = "#C6F6D5";
             setTimeout(function() {{
-                btn.innerText = "📋 Copiar";
-                btn.style.backgroundColor = "#EDF2F7";
-            }}, 2000);
+                btn.innerText = "📋";
+                btn.style.backgroundColor = "#F7FAFC";
+            }}, 1500);
         }}).catch(function(err) {{
-            alert("No se pudo copiar automáticamente: " + text);
+            console.error("Error al copiar: ", err);
         }});
     }}
     </script>
     """
-    components.html(html_code, height=45)
+    components.html(html_code, height=48)
 
-# --- ESTILOS CSS ---
+# --- ESTILOS RESPONSIVOS PARA MÓVIL ---
 st.markdown("""
     <style>
     .stApp {
@@ -89,7 +90,7 @@ st.markdown("""
     .brand-title {
         text-align: center;
         font-weight: 800;
-        font-size: 2.2rem;
+        font-size: 2rem;
         color: #1A202C;
         margin-bottom: 2px;
     }
@@ -100,37 +101,46 @@ st.markdown("""
         background-color: #EBF8FF;
         border: 1px solid #BEE3F8;
         border-radius: 8px;
-        padding: 5px 10px;
-        margin: 5px auto 15px auto;
+        padding: 4px 10px;
+        margin: 4px auto 12px auto;
         width: fit-content;
         font-weight: 600;
     }
     .big-rates {
         text-align: center;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #4A5568;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
-    .formatted-display {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #2D3748;
-        background-color: #F7FAFC;
+    .calc-box {
+        background-color: #FAFAFA;
         border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 8px 12px;
-        margin-top: 4px;
+        border-radius: 14px;
+        padding: 16px 12px;
+        margin-bottom: 12px;
+    }
+    .input-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #4A5568;
+        margin-bottom: 4px;
+    }
+    .formatted-preview {
+        font-size: 0.85rem;
+        color: #718096;
+        font-weight: 600;
+        margin-top: 2px;
     }
     div[data-testid="stRadio"] > div {
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
     }
     .version-footer {
         text-align: center;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: #A0AEC0;
-        margin-top: 35px;
+        margin-top: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -139,12 +149,10 @@ st.markdown("<div class='brand-title'>⚡ TasaYa</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 {fecha_valor}</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='big-rates'>💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; 💶 EUR: <b>{fmt_ve(tasa_euro)} Bs</b></div>", unsafe_allow_html=True)
 
-# Función para reiniciar campos al cambiar de moneda
 def reset_campos():
     st.session_state["val_ext"] = 0.0
     st.session_state["val_bs"] = 0.0
 
-# Selector principal
 moneda = st.radio(
     "",
     ["💵 Dólares ($)", "💶 Euros (€)"],
@@ -157,7 +165,6 @@ moneda = st.radio(
 tasa_actual = tasa_dolar if "Dólares" in moneda else tasa_euro
 simbolo = "$" if "Dólares" in moneda else "€"
 
-# Callbacks de sincronización
 def update_from_ext():
     m = st.session_state.get("val_ext", 0.0)
     st.session_state["val_bs"] = round(m * tasa_actual, 2)
@@ -172,11 +179,14 @@ def limpiar_todo():
 
 st.write("")
 
-# MONTO EXTRANJERO
-col_ext_label, col_ext_input, col_ext_copy = st.columns([1, 4, 2])
-with col_ext_label:
-    st.markdown(f"### {simbolo}")
-with col_ext_input:
+val_ext_actual = st.session_state.get("val_ext", 0.0)
+val_bs_actual = st.session_state.get("val_bs", 0.0)
+
+# BLOQUE MONEDA EXTRANJERA
+st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
+st.markdown(f"<div class='input-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
+col_e_in, col_e_cp = st.columns([5, 1])
+with col_e_in:
     st.number_input(
         f"Monto {simbolo}",
         min_value=0.0,
@@ -185,20 +195,17 @@ with col_ext_input:
         format="%.2f",
         label_visibility="collapsed"
     )
-    val_ext_actual = st.session_state.get("val_ext", 0.0)
-    st.markdown(f"<div class='formatted-display'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
-with col_ext_copy:
-    st.write("")
-    st.write("")
-    boton_copiar_js(f"{simbolo}{fmt_ve(val_ext_actual)}", "ext")
+    if val_ext_actual > 0:
+        st.markdown(f"<div class='formatted-preview'>Formato: {simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
+with col_e_cp:
+    boton_copiar_js(fmt_ve(val_ext_actual), "ext")
+st.markdown("</div>", unsafe_allow_html=True)
 
-st.write("")
-
-# MONTO BOLÍVARES
-col_bs_label, col_bs_input, col_bs_copy = st.columns([1, 4, 2])
-with col_bs_label:
-    st.markdown("### Bs")
-with col_bs_input:
+# BLOQUE BOLÍVARES
+st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
+st.markdown("<div class='input-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
+col_b_in, col_b_cp = st.columns([5, 1])
+with col_b_in:
     st.number_input(
         "Monto Bs",
         min_value=0.0,
@@ -207,18 +214,14 @@ with col_bs_input:
         format="%.2f",
         label_visibility="collapsed"
     )
-    val_bs_actual = st.session_state.get("val_bs", 0.0)
-    st.markdown(f"<div class='formatted-display'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
-with col_bs_copy:
-    st.write("")
-    st.write("")
-    boton_copiar_js(f"{fmt_ve(val_bs_actual)} Bs", "bs")
+    if val_bs_actual > 0:
+        st.markdown(f"<div class='formatted-preview'>Formato: {fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
+with col_b_cp:
+    boton_copiar_js(fmt_ve(val_bs_actual), "bs")
+st.markdown("</div>", unsafe_allow_html=True)
 
-# Botón Limpiar
-col_btn, _ = st.columns([2, 3])
-with col_btn:
-    st.write("")
-    st.button("🧹 Limpiar", key="btn_clean", on_click=limpiar_todo)
+# BOTÓN LIMPIAR
+st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, use_container_width=True)
 
 st.write("---")
 
@@ -231,4 +234,4 @@ df_tabla = pd.DataFrame({
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v1.6.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v1.7.0</div>", unsafe_allow_html=True)
