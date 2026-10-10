@@ -5,8 +5,23 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def obtener_tasa_usdt():
-    """Obtiene el precio de compra/venta promedio de USDT P2P"""
+def obtener_tasa_usdt_real():
+    """Obtiene la tasa de USDT P2P de forma directa y libre de bloqueos de IP"""
+    # Fuente 1: API oficial de DolarAPI (Venezuela Cripto/USDT)
+    try:
+        url = "https://ve.dolarapi.com/v1/dolares/cripto"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            promedio = data.get("promedio")
+            if promedio and float(promedio) > 0:
+                print(f"USDT obtenido exitosamente de DolarAPI: {promedio}")
+                return round(float(promedio), 2)
+    except Exception as e:
+        print(f"Error en DolarAPI: {e}")
+
+    # Fuente 2: Respaldo Binance P2P API
     try:
         url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
         payload = {
@@ -22,19 +37,13 @@ def obtener_tasa_usdt():
         data = resp.json()
         if data.get("data"):
             precios = [float(adv["adv"]["price"]) for adv in data["data"]]
-            return round(sum(precios) / len(precios), 2)
+            prom = sum(precios) / len(precios)
+            print(f"USDT obtenido exitosamente de Binance: {prom}")
+            return round(prom, 2)
     except Exception as e:
-        print(f"Error obteniendo USDT Binance: {e}")
+        print(f"Error en Binance P2P: {e}")
 
-    # Respaldos alternativos si falla Binance
-    try:
-        resp = requests.get("https://ve.dolarapi.com/v1/dolares/cripto", timeout=5)
-        if resp.status_code == 200:
-            return float(resp.json().get("promedio", 1000.0))
-    except Exception:
-        pass
-
-    return 1000.00 # Tasa por defecto si no hay conexión
+    return 1000.00  # Respaldo en caso extremo sin conexión
 
 def obtener_tasas_bcv():
     datos = {
@@ -72,7 +81,7 @@ def obtener_tasas_bcv():
 
 def main():
     datos = obtener_tasas_bcv()
-    datos["usdt_ref"] = obtener_tasa_usdt()
+    datos["usdt_ref"] = obtener_tasa_usdt_real()
 
     if not datos["bcv_dolar"]:
         datos["bcv_dolar"] = 876.80
@@ -84,7 +93,7 @@ def main():
     with open("tasas.json", "w", encoding="utf-8") as f:
         json.dump(datos, f, indent=4, ensure_ascii=False)
 
-    print("Datos actualizados exitosamente:", datos)
+    print("Archivo tasas.json actualizado con éxito:", datos)
 
 if __name__ == "__main__":
     main()
