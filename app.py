@@ -148,7 +148,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ENCABEZADO "CUENTAS CLARAS" CON EMOJIS DE APRETON DE MANOS Y RAYO
+# ENCABEZADO "CUENTAS CLARAS"
 st.markdown("<div class='brand-title'>🤝 Cuentas<span>Claras</span> ⚡</div>", unsafe_allow_html=True)
 st.markdown("<div class='brand-tagline'>Calculadora Rápida • Sin Publicidad</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 Fecha Tasa BCV: <b>{fecha_valor}</b></div>", unsafe_allow_html=True)
@@ -251,8 +251,8 @@ st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, us
 
 st.write("---")
 
-# TABLA DE CAMBIOS RÁPIDOS
-st.markdown(f"### 📊 Tabla de Cambios Rápidos ({simbolo})")
+# CHULETA RÁPIDA
+st.markdown(f"### 📝 Chuleta Rápida ({simbolo})")
 cantidades = [1, 5, 10, 15, 20, 30, 35, 40, 45, 50, 100]
 
 monto_col = [f"{simbolo}{c},00" for c in cantidades]
@@ -267,4 +267,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.6.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.7.0</div>", unsafe_allow_html=True)
