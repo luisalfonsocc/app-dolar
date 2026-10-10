@@ -55,14 +55,18 @@ st.markdown("""
     .brand-title {
         text-align: center;
         font-weight: 900;
-        font-size: 2.1rem;
-        color: #111827 !important;
+        font-size: 2.3rem;
+        color: #0F172A !important;
         margin-bottom: 2px;
+        letter-spacing: -0.5px;
+    }
+    .brand-title span {
+        color: #2563EB !important;
     }
     .date-badge {
         text-align: center;
         font-size: 0.85rem;
-        color: #1D4ED8 !important;
+        color: #1E40AF !important;
         background-color: #EFF6FF !important;
         border: 1px solid #BFDBFE !important;
         border-radius: 8px;
@@ -75,12 +79,12 @@ st.markdown("""
         text-align: center;
         font-size: 0.95rem;
         font-weight: 700;
-        color: #374151 !important;
+        color: #334155 !important;
         margin-bottom: 20px;
     }
     .calc-card {
-        background-color: #F9FAFB !important;
-        border: 1px solid #E5E7EB !important;
+        background-color: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
         border-radius: 12px;
         padding: 14px;
         margin-bottom: 12px;
@@ -88,11 +92,11 @@ st.markdown("""
     .card-label {
         font-size: 0.9rem;
         font-weight: 800;
-        color: #1F2937 !important;
+        color: #1E293B !important;
         margin-bottom: 6px;
     }
     .preview-box {
-        background-color: #374151 !important;
+        background-color: #334155 !important;
         color: #FFFFFF !important;
         font-size: 1.15rem;
         font-weight: 800;
@@ -112,35 +116,36 @@ st.markdown("""
         font-weight: 600;
     }
     div[data-testid="stTable"] table {
-        color: #111827 !important;
+        color: #0F172A !important;
         background-color: #FFFFFF !important;
     }
     div[data-testid="stTable"] th {
-        color: #111827 !important;
-        background-color: #F3F4F6 !important;
+        color: #0F172A !important;
+        background-color: #F1F5F9 !important;
         font-weight: 800 !important;
     }
     div[data-testid="stTable"] td {
-        color: #1F2937 !important;
+        color: #1E293B !important;
     }
     div[data-testid="stRadio"] label p {
-        color: #111827 !important;
+        color: #0F172A !important;
         font-weight: 700 !important;
         font-size: 1rem !important;
     }
     .version-footer {
         text-align: center;
         font-size: 0.8rem;
-        color: #9CA3AF !important;
+        color: #94A3B8 !important;
         margin-top: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<div class='brand-title'>⚡ TasaYa</div>", unsafe_allow_html=True)
-st.markdown(f"<div class='date-badge'>📅 {fecha_valor}</div>", unsafe_allow_html=True)
+# ENCABEZADO CON NOMBRE COOL Y FECHA TASA BCV
+st.markdown("<div class='brand-title'>⚡ Tasa<span>Ya</span></div>", unsafe_allow_html=True)
+st.markdown(f"<div class='date-badge'>📅 Fecha Tasa BCV: <b>{fecha_valor}</b></div>", unsafe_allow_html=True)
 
-# TASAS SUPERIORES DESTACADAS (USD, EUR, USDT)
+# TASAS SUPERIORES DESTACADAS
 st.markdown(
     f"<div class='big-rates'>"
     f"💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; "
@@ -238,7 +243,7 @@ st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, us
 
 st.write("---")
 
-# TABLA DE CAMBIOS RÁPIDOS (LA CHULETA CON COLUMNA USDT A LA DERECHA)
+# TABLA DE CAMBIOS RÁPIDOS
 st.markdown(f"### 📊 Tabla de Cambios Rápidos ({simbolo})")
 cantidades = [1, 5, 10, 15, 20, 30, 35, 40, 45, 50, 100]
 
@@ -254,4 +259,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.2.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.3.0</div>", unsafe_allow_html=True)
