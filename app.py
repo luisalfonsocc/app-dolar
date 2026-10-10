@@ -3,8 +3,8 @@ import os
 import requests
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
 
+# Configuración de página
 st.set_page_config(page_title="TasaYa", page_icon="⚡", layout="centered")
 
 def cargar_tasas():
@@ -45,105 +45,94 @@ def fmt_ve(val):
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-def boton_copiar_js(texto_solo_numero, key):
-    html_code = f"""
-    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding-top: 2px;">
-        <button id="btn_{key}" onclick="copiar_{key}()" style="
-            background-color: #F7FAFC;
-            border: 1px solid #CBD5E0;
-            border-radius: 10px;
-            padding: 9px 12px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        ">📋</button>
-    </div>
-    <script>
-    function copiar_{key}() {{
-        var text = "{texto_solo_numero}";
-        navigator.clipboard.writeText(text).then(function() {{
-            var btn = document.getElementById("btn_{key}");
-            btn.innerText = "✅";
-            btn.style.backgroundColor = "#C6F6D5";
-            setTimeout(function() {{
-                btn.innerText = "📋";
-                btn.style.backgroundColor = "#F7FAFC";
-            }}, 1500);
-        }}).catch(function(err) {{
-            console.error("Error al copiar: ", err);
-        }});
-    }}
-    </script>
-    """
-    components.html(html_code, height=48)
-
-# --- ESTILOS RESPONSIVOS PARA MÓVIL ---
+# --- CSS ANTI-MODO OSCURO DEL TELÉFONO + DISEÑO MOBILE PERFECTO ---
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #FFFFFF;
+    /* Forzar fondo blanco y texto oscuro absoluto */
+    html, body, [data-testid="stAppViewContainer"], .stApp {
+        background-color: #FFFFFF !important;
+        color: #1A202C !important;
     }
+
+    /* Encabezados */
     .brand-title {
         text-align: center;
-        font-weight: 800;
-        font-size: 2rem;
-        color: #1A202C;
+        font-weight: 900;
+        font-size: 2.1rem;
+        color: #111827 !important;
         margin-bottom: 2px;
     }
     .date-badge {
         text-align: center;
         font-size: 0.85rem;
-        color: #2B6CB0;
-        background-color: #EBF8FF;
-        border: 1px solid #BEE3F8;
+        color: #1D4ED8 !important;
+        background-color: #EFF6FF !important;
+        border: 1px solid #BFDBFE !important;
         border-radius: 8px;
-        padding: 4px 10px;
-        margin: 4px auto 12px auto;
+        padding: 5px 12px;
+        margin: 6px auto 14px auto;
         width: fit-content;
-        font-weight: 600;
+        font-weight: 700;
     }
     .big-rates {
         text-align: center;
         font-size: 1rem;
-        font-weight: 600;
-        color: #4A5568;
-        margin-bottom: 15px;
+        font-weight: 700;
+        color: #374151 !important;
+        margin-bottom: 20px;
     }
-    .calc-box {
-        background-color: #FAFAFA;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 16px 12px;
+
+    /* Tarjetas de Entrada de Dinero */
+    .calc-card {
+        background-color: #F9FAFB !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 12px;
+        padding: 14px;
         margin-bottom: 12px;
     }
-    .input-label {
+    .card-label {
         font-size: 0.9rem;
-        font-weight: 700;
-        color: #4A5568;
-        margin-bottom: 4px;
+        font-weight: 800;
+        color: #1F2937 !important;
+        margin-bottom: 6px;
     }
-    .formatted-preview {
-        font-size: 1.1rem;
-        color: #2D3748;
-        font-weight: 700;
-        background-color: #EDF2F7;
+    .preview-box {
+        background-color: #374151 !important;
+        color: #FFFFFF !important;
+        font-size: 1.15rem;
+        font-weight: 800;
+        padding: 8px 12px;
         border-radius: 8px;
-        padding: 6px 10px;
-        margin-top: 6px;
+        margin-top: 8px;
         display: inline-block;
+        letter-spacing: 0.5px;
     }
-    div[data-testid="stRadio"] > div {
-        justify-content: center;
-        gap: 8px;
+
+    /* Tablas forzadas a texto visible */
+    div[data-testid="stTable"] table {
+        color: #111827 !important;
+        background-color: #FFFFFF !important;
     }
+    div[data-testid="stTable"] th {
+        color: #111827 !important;
+        background-color: #F3F4F6 !important;
+        font-weight: 800 !important;
+    }
+    div[data-testid="stTable"] td {
+        color: #1F2937 !important;
+    }
+
+    /* Textos del Radio Button */
+    div[data-testid="stRadio"] label p {
+        color: #111827 !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+    }
+
     .version-footer {
         text-align: center;
-        font-size: 0.75rem;
-        color: #A0AEC0;
+        font-size: 0.8rem;
+        color: #9CA3AF !important;
         margin-top: 30px;
     }
     </style>
@@ -187,9 +176,10 @@ val_ext_actual = st.session_state.get("val_ext", 0.0)
 val_bs_actual = st.session_state.get("val_bs", 0.0)
 
 # BLOQUE MONEDA EXTRANJERA
-st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
-st.markdown(f"<div class='input-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
-col_e_in, col_e_cp = st.columns([5, 1])
+st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
+st.markdown(f"<div class='card-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
+
+col_e_in, col_e_cp = st.columns([4, 1])
 with col_e_in:
     st.number_input(
         f"Monto {simbolo}",
@@ -199,16 +189,20 @@ with col_e_in:
         format="%.2f",
         label_visibility="collapsed"
     )
-    if val_ext_actual > 0:
-        st.markdown(f"<div class='formatted-preview'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
 with col_e_cp:
-    boton_copiar_js(fmt_ve(val_ext_actual), "ext")
+    if st.button("📋", key="btn_cp_ext", help="Copiar solo números"):
+        st.code(fmt_ve(val_ext_actual), language=None)
+
+if val_ext_actual > 0:
+    st.markdown(f"<div class='preview-box'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
+
 st.markdown("</div>", unsafe_allow_html=True)
 
 # BLOQUE BOLÍVARES
-st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
-st.markdown("<div class='input-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
-col_b_in, col_b_cp = st.columns([5, 1])
+st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
+st.markdown("<div class='card-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
+
+col_b_in, col_b_cp = st.columns([4, 1])
 with col_b_in:
     st.number_input(
         "Monto Bs",
@@ -218,10 +212,13 @@ with col_b_in:
         format="%.2f",
         label_visibility="collapsed"
     )
-    if val_bs_actual > 0:
-        st.markdown(f"<div class='formatted-preview'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
 with col_b_cp:
-    boton_copiar_js(fmt_ve(val_bs_actual), "bs")
+    if st.button("📋", key="btn_cp_bs", help="Copiar solo números"):
+        st.code(fmt_ve(val_bs_actual), language=None)
+
+if val_bs_actual > 0:
+    st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
+
 st.markdown("</div>", unsafe_allow_html=True)
 
 # BOTÓN LIMPIAR
@@ -230,7 +227,7 @@ st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, us
 st.write("---")
 
 # TABLA DE CAMBIOS RÁPIDOS
-st.subheader(f"📊 Tabla de Cambios Rápidos ({simbolo})")
+st.markdown(f"### 📊 Tabla de Cambios Rápidos ({simbolo})")
 cantidades = [1, 5, 10, 15, 20, 30, 35, 40, 45, 50, 100]
 df_tabla = pd.DataFrame({
     f"Monto ({simbolo})": [f"{simbolo}{c},00" for c in cantidades],
@@ -238,4 +235,4 @@ df_tabla = pd.DataFrame({
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v1.9.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.0.0</div>", unsafe_allow_html=True)
