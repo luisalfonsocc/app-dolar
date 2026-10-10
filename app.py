@@ -45,7 +45,7 @@ def fmt_ve(val):
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# --- CSS RESPONSIVO Y VISIBLE ---
+# --- ESTILOS CSS ANTI-DARK MODE ---
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"], .stApp {
@@ -139,7 +139,16 @@ st.markdown("""
 
 st.markdown("<div class='brand-title'>⚡ TasaYa</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 {fecha_valor}</div>", unsafe_allow_html=True)
-st.markdown(f"<div class='big-rates'>💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; 💶 EUR: <b>{fmt_ve(tasa_euro)} Bs</b></div>", unsafe_allow_html=True)
+
+# TASAS SUPERIORES DESTACADAS (USD, EUR, USDT)
+st.markdown(
+    f"<div class='big-rates'>"
+    f"💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; "
+    f"💶 EUR: <b>{fmt_ve(tasa_euro)} Bs</b> &nbsp;|&nbsp; "
+    f"🪙 USDT: <b>{fmt_ve(tasa_usdt)} Bs</b>"
+    f"</div>", 
+    unsafe_allow_html=True
+)
 
 def reset_campos():
     st.session_state["val_ext"] = 0.0
@@ -220,7 +229,7 @@ if val_bs_actual > 0:
     
     # REFERENCIA EN USDT (INFO ADICIONAL)
     usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
-    st.markdown(f"<div class='usdt-ref-box'>🪙 Equivalente estimado: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref. {fmt_ve(tasa_usdt)} Bs/USDT)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='usdt-ref-box'>🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref. {fmt_ve(tasa_usdt)} Bs/USDT)</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -229,13 +238,20 @@ st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, us
 
 st.write("---")
 
-# TABLA DE CAMBIOS RÁPIDOS
+# TABLA DE CAMBIOS RÁPIDOS (LA CHULETA CON COLUMNA USDT A LA DERECHA)
 st.markdown(f"### 📊 Tabla de Cambios Rápidos ({simbolo})")
 cantidades = [1, 5, 10, 15, 20, 30, 35, 40, 45, 50, 100]
+
+monto_col = [f"{simbolo}{c},00" for c in cantidades]
+bs_col = [f"{fmt_ve(c * tasa_actual)} Bs" for c in cantidades]
+usdt_col = [f"~{fmt_ve((c * tasa_actual) / tasa_usdt)} USDT" for c in cantidades]
+
 df_tabla = pd.DataFrame({
-    f"Monto ({simbolo})": [f"{simbolo}{c},00" for c in cantidades],
-    "Equivalente en Bolívares (Bs)": [f"{fmt_ve(c * tasa_actual)} Bs" for c in cantidades]
+    f"Monto ({simbolo})": monto_col,
+    "En Bolívares (Bs)": bs_col,
+    "En USDT 🪙": usdt_col
 })
+
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.1.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.2.0</div>", unsafe_allow_html=True)
