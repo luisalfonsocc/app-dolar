@@ -4,7 +4,6 @@ import requests
 import streamlit as st
 import pandas as pd
 
-# Configuración de página
 st.set_page_config(page_title="TasaYa", page_icon="⚡", layout="centered")
 
 def cargar_tasas():
@@ -31,30 +30,28 @@ def cargar_tasas():
         d_val = float(d_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if d_elem else 876.80
         e_val = float(e_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if e_elem else 982.00
         f_val = f_elem.text.strip() if f_elem else "Fecha Oficial BCV"
-        return {"bcv_dolar": d_val, "bcv_euro": e_val, "fecha_valor": f_val}
+        return {"bcv_dolar": d_val, "bcv_euro": e_val, "fecha_valor": f_val, "usdt_ref": 1000.00}
     except Exception:
-        return {"bcv_dolar": 876.80, "bcv_euro": 982.00, "fecha_valor": "Fecha Oficial BCV"}
+        return {"bcv_dolar": 876.80, "bcv_euro": 982.00, "fecha_valor": "Fecha Oficial BCV", "usdt_ref": 1000.00}
 
 datos = cargar_tasas()
 tasa_dolar = datos.get("bcv_dolar", 876.80)
 tasa_euro = datos.get("bcv_euro", 982.00)
 fecha_valor = datos.get("fecha_valor", "Fecha Oficial BCV")
+tasa_usdt = datos.get("usdt_ref", 1000.00)
 
 def fmt_ve(val):
     if val is None or val == 0:
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# --- CSS ANTI-MODO OSCURO DEL TELÉFONO + DISEÑO MOBILE PERFECTO ---
+# --- CSS RESPONSIVO Y VISIBLE ---
 st.markdown("""
     <style>
-    /* Forzar fondo blanco y texto oscuro absoluto */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         background-color: #FFFFFF !important;
         color: #1A202C !important;
     }
-
-    /* Encabezados */
     .brand-title {
         text-align: center;
         font-weight: 900;
@@ -76,13 +73,11 @@ st.markdown("""
     }
     .big-rates {
         text-align: center;
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 700;
         color: #374151 !important;
         margin-bottom: 20px;
     }
-
-    /* Tarjetas de Entrada de Dinero */
     .calc-card {
         background-color: #F9FAFB !important;
         border: 1px solid #E5E7EB !important;
@@ -105,10 +100,17 @@ st.markdown("""
         border-radius: 8px;
         margin-top: 8px;
         display: inline-block;
-        letter-spacing: 0.5px;
     }
-
-    /* Tablas forzadas a texto visible */
+    .usdt-ref-box {
+        font-size: 0.85rem;
+        color: #047857 !important;
+        background-color: #ECFDF5 !important;
+        border: 1px solid #A7F3D0 !important;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-top: 8px;
+        font-weight: 600;
+    }
     div[data-testid="stTable"] table {
         color: #111827 !important;
         background-color: #FFFFFF !important;
@@ -121,14 +123,11 @@ st.markdown("""
     div[data-testid="stTable"] td {
         color: #1F2937 !important;
     }
-
-    /* Textos del Radio Button */
     div[data-testid="stRadio"] label p {
         color: #111827 !important;
         font-weight: 700 !important;
         font-size: 1rem !important;
     }
-
     .version-footer {
         text-align: center;
         font-size: 0.8rem;
@@ -175,7 +174,7 @@ st.write("")
 val_ext_actual = st.session_state.get("val_ext", 0.0)
 val_bs_actual = st.session_state.get("val_bs", 0.0)
 
-# BLOQUE MONEDA EXTRANJERA
+# MONEDA EXTRANJERA
 st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
 st.markdown(f"<div class='card-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
 
@@ -198,7 +197,7 @@ if val_ext_actual > 0:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# BLOQUE BOLÍVARES
+# BOLÍVARES
 st.markdown("<div class='calc-card'>", unsafe_allow_html=True)
 st.markdown("<div class='card-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
 
@@ -218,6 +217,10 @@ with col_b_cp:
 
 if val_bs_actual > 0:
     st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
+    
+    # REFERENCIA EN USDT (INFO ADICIONAL)
+    usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
+    st.markdown(f"<div class='usdt-ref-box'>🪙 Equivalente estimado: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref. {fmt_ve(tasa_usdt)} Bs/USDT)</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -235,4 +238,4 @@ df_tabla = pd.DataFrame({
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.0.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.1.0</div>", unsafe_allow_html=True)
