@@ -5,82 +5,98 @@ import streamlit as st
 
 st.set_page_config(page_title="Al Cambio Vzla", page_icon="💸", layout="centered")
 
-def cargar_tasas_desde_json():
-    # Intentar leer el archivo json generado en el servidor
+def cargar_tasas():
     if os.path.exists("tasas.json"):
         try:
             with open("tasas.json", "r") as f:
                 return json.load(f)
         except Exception:
             pass
-    
-    # Respaldo en vivo directo si por alguna razón no existe el json
+
+    # Respaldo en vivo si aún no existe el JSON
     try:
-        url_bcv = "https://www.bcv.org.ve/"
+        url = "https://www.bcv.org.ve/"
         headers = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(url_bcv, headers=headers, verify=False, timeout=5)
-        from bs4 import BeautifulSoup
+        resp = requests.get(url, headers=headers, verify=False, timeout=5)
         soup = BeautifulSoup(resp.text, 'html.parser')
-        contenedor = soup.find('div', id='dolar')
-        bcv_val = float(contenedor.find('strong').text.strip().replace('.', '').replace(',', '.')) if contenedor else None
+        
+        d_elem = soup.find('div', id='dolar')
+        e_elem = soup.find('div', id='euro')
+        
+        d_val = float(d_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if d_elem else None
+        e_val = float(e_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if e_elem else None
+        return {"bcv_dolar": d_val, "bcv_euro": e_val}
     except Exception:
-        bcv_val = None
+        return {"bcv_dolar": None, "bcv_euro": None}
 
-    try:
-        resp_c = requests.get("https://criptoya.com/api/binancep2p/usdt/ves/5", timeout=5).json()
-        precios = [float(item["price"]) for item in resp_c.get("data", [])[:5]]
-        ves_val = round(sum(precios) / len(precios), 2) if precios else None
-    except Exception:
-        ves_val = None
+tasas = cargar_tasas()
+tasa_dolar = tasas.get("bcv_dolar")
+tasa_euro = tasas.get("bcv_euro")
 
-    try:
-        resp_clp = requests.get("https://criptoya.com/api/binancep2p/usdt/clp/5", timeout=5).json()
-        precios_clp = [float(item["price"]) for item in resp_clp.get("data", [])[:5]]
-        clp_val = round(sum(precios_clp) / len(precios_clp), 2) if precios_clp else None
-    except Exception:
-        clp_val = None
-
-    return {"bcv": bcv_val, "binance_ves": ves_val, "binance_clp": clp_val}
-
-tasas = cargar_tasas_desde_json()
-tasa_bcv = tasas.get("bcv")
-tasa_usdt = tasas.get("binance_ves")
-tasa_clp = tasas.get("binance_clp")
-
-# --- INTERFAZ TIPO APP ---
+# --- CABECERA ---
 st.markdown("<h2 style='text-align: center;'>💸 Al Cambio Vzla</h2>", unsafe_allow_html=True)
 
 # Tarjetas de Tasas
 col1, col2 = st.columns(2)
 with col1:
-    st.metric("🏛️ BCV (Oficial)", f"{tasa_bcv:,.2f} Bs" if tasa_bcv else "N/A")
+    st.metric("💵 Dólar BCV", f"{tasa_dolar:,.2f} Bs" if tasa_dolar else "N/A")
 with col2:
-    st.metric("🟡 USDT (Paralelo)", f"{tasa_usdt:,.2f} Bs" if tasa_usdt else "N/A")
-
-if tasa_clp:
-    st.caption(f"🇨🇱 Binance CLP: ${tasa_clp:,.0f} CLP/USDT")
+    st.metric("💶 Euro BCV", f"{tasa_euro:,.2f} Bs" if tasa_euro else "N/A")
 
 st.divider()
 
-# --- CALCULADORA DE UN SOLO CAMPO ---
+# --- CALCULADORA ---
 st.subheader("🧮 Calculadora Rápida")
 
-modo = st.radio("Convertir desde:", ["Dólares ($)", "Bolívares (Bs)"], horizontal=True)
+if "monto_input" not in st.session_state:
+    st.session_state.monto_input = 10.0
 
-if modo == "Dólares ($)":
-    monto_usd = st.number_input("Monto en Dólares ($):", min_value=0.0, value=10.0, step=5.0)
-    
-    bs_bcv = monto_usd * tasa_bcv if tasa_bcv else 0
-    bs_usdt = monto_usd * tasa_usdt if tasa_usdt else 0
-    
-    st.success(f"**🏛️ BCV:** {bs_bcv:,.2f} Bs")
-    st.info(f"**🟡 Paralelo:** {bs_usdt:,.2f} Bs")
+def limpiar():
+    st.session_state.monto_input = 0.0
 
-else:
-    monto_bs = st.number_input("Monto en Bolívares (Bs):", min_value=0.0, value=500.0, step=50.0)
+opcion = st.radio(
+    "Convertir desde:",
+    ["Dólares ($)", "Euros (€)", "Bolívares (Bs)"],
+    horizontal=True
+)
+
+col_input, col_btn = st.columns([3, 1])
+with col_input:
+    monto = st.number_input(
+        "Monto a calcular:",
+        min_value=0.0,
+        key="monto_input",
+        step=5.0,
+        format="%.2f"
+    )
+
+with col_btn:
+    st.write("") # Espaciador para alinear con el input
+    st.write("")
+    st.button("🧹 Limpiar", on_click=limpiar, use_container_width=True)
+
+st.write("---")
+
+# Lógica de conversión
+if opcion == "Dólares ($)":
+    bs_val = monto * tasa_dolar if tasa_dolar else 0
+    eur_val = (monto * tasa_dolar / tasa_euro) if (tasa_dolar and tasa_euro) else 0
     
-    usd_bcv = monto_bs / tasa_bcv if tasa_bcv else 0
-    usd_usdt = monto_bs / tasa_usdt if tasa_usdt else 0
+    st.success(f"**🇻🇪 En Bolívares:** `{bs_val:,.2f} Bs`")
+    st.info(f"**💶 Equivalente en Euros:** `{eur_val:,.2f} €`")
+
+elif opcion == "Euros (€)":
+    bs_val = monto * tasa_euro if tasa_euro else 0
+    usd_val = (monto * tasa_euro / tasa_dolar) if (tasa_dolar and tasa_euro) else 0
     
-    st.success(f"**🏛️ BCV:** ${usd_bcv:,.2f} USD")
-    st.info(f"**🟡 Paralelo:** ${usd_usdt:,.2f} USDT")
+    st.success(f"**🇻🇪 En Bolívares:** `{bs_val:,.2f} Bs`")
+    st.info(f"**💵 Equivalente en Dólares:** `{usd_val:,.2f} $`")
+
+else: # Bolívares (Bs)
+    usd_val = monto / tasa_dolar if tasa_dolar else 0
+    eur_val = monto / tasa_euro if tasa_euro else 0
+    
+    st.success(f"**💵 En Dólares ($):** `{usd_val:,.2f} $`")
+    st.info(f"**💶 En Euros (€):** `{eur_val:,.2f} €`")
+
+st.caption("💡 *Tip: Puedes presionar o mantener pulsado sobre el cuadro con borde de color para copiar el resultado directo al portapapeles.*")
