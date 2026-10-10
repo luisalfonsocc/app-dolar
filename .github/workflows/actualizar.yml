@@ -1,0 +1,36 @@
+name: Actualizar Tasas Automaticamente
+
+on:
+  schedule:
+    # Se ejecuta cada 30 minutos automáticamente
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub si quieres
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Descargar codigo del repo
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar librerias
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4 urllib3
+
+    - name: Ejecutar script de tasas
+      run: python actualizar_tasas.py
+
+    - name: Guardar y subir tasas.json al repositorio
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add tasas.json
+        git commit -m "Auto-update tasas.json" || exit 0
+        git push
