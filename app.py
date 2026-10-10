@@ -4,7 +4,22 @@ import requests
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="CuentasClaras", page_icon="🤝", layout="centered")
+# CONFIGURACIÓN DE PÁGINA CON METADATOS PARA COMPARTIR EN WHATSAPP / TELEGRAM
+st.set_page_config(
+    page_title="🤝 CuentasClaras ⚡ - Calculadora Rápida", 
+    page_icon="🤝", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+# METADATOS OPEN GRAPH
+st.markdown("""
+    <head>
+        <meta property="og:title" content="🤝 CuentasClaras ⚡" />
+        <meta property="og:description" content="Calculadora Rápida de Dólar, Euro y USDT a Bolívares. Sin publicidad y al instante." />
+        <meta property="og:type" content="website" />
+    </head>
+""", unsafe_allow_html=True)
 
 def cargar_tasas():
     if os.path.exists("tasas.json"):
@@ -276,4 +291,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v3.1.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v3.2.0</div>", unsafe_allow_html=True)
