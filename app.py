@@ -9,94 +9,90 @@ def cargar_tasas():
     if os.path.exists("tasas.json"):
         try:
             with open("tasas.json", "r") as f:
-                return json.load(f)
+                datos = json.load(f)
+                if "bcv_dolar" in datos and datos["bcv_dolar"]:
+                    return datos
         except Exception:
             pass
 
-    # Respaldo en vivo si aún no existe el JSON
+    # Respaldo en vivo si aún no existe o falla el JSON
     try:
         url = "https://www.bcv.org.ve/"
         headers = {"User-Agent": "Mozilla/5.0"}
         resp = requests.get(url, headers=headers, verify=False, timeout=5)
+        from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.text, 'html.parser')
         
         d_elem = soup.find('div', id='dolar')
         e_elem = soup.find('div', id='euro')
         
-        d_val = float(d_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if d_elem else None
-        e_val = float(e_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if e_elem else None
+        d_val = float(d_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if d_elem else 36.50
+        e_val = float(e_elem.find('strong').text.strip().replace('.', '').replace(',', '.')) if e_elem else 39.50
         return {"bcv_dolar": d_val, "bcv_euro": e_val}
     except Exception:
-        return {"bcv_dolar": None, "bcv_euro": None}
+        return {"bcv_dolar": 36.50, "bcv_euro": 39.50}
 
 tasas = cargar_tasas()
-tasa_dolar = tasas.get("bcv_dolar")
-tasa_euro = tasas.get("bcv_euro")
+tasa_dolar = tasas.get("bcv_dolar", 0)
+tasa_euro = tasas.get("bcv_euro", 0)
 
-# --- CABECERA ---
-st.markdown("<h2 style='text-align: center;'>💸 Al Cambio Vzla</h2>", unsafe_allow_html=True)
+# Estilo personalizado para botones y tipografía móvil
+st.markdown("""
+    <style>
+    .big-rate {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #4A5568;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Tarjetas de Tasas
-col1, col2 = st.columns(2)
-with col1:
-    st.metric("💵 Dólar BCV", f"{tasa_dolar:,.2f} Bs" if tasa_dolar else "N/A")
-with col2:
-    st.metric("💶 Euro BCV", f"{tasa_euro:,.2f} Bs" if tasa_euro else "N/A")
+st.markdown("<h2 style='text-align: center; margin-bottom: 0px;'>💸 Al Cambio Vzla</h2>", unsafe_allow_html=True)
+st.markdown(f"<div class='big-rate'>BCV: <b>${tasa_dolar:,.2f} Bs</b> | <b>€{tasa_euro:,.2f} Bs</b></div>", unsafe_allow_html=True)
 
 st.divider()
 
-# --- CALCULADORA ---
-st.subheader("🧮 Calculadora Rápida")
+# --- PESTAÑAS PRINCIPALES POR MONEDA ---
+tab_usd, tab_eur = st.tabs(["💵 Dólares ($)", "💶 Euros (€)"])
 
-if "monto_input" not in st.session_state:
-    st.session_state.monto_input = 10.0
-
-def limpiar():
-    st.session_state.monto_input = 0.0
-
-opcion = st.radio(
-    "Convertir desde:",
-    ["Dólares ($)", "Euros (€)", "Bolívares (Bs)"],
-    horizontal=True
-)
-
-col_input, col_btn = st.columns([3, 1])
-with col_input:
-    monto = st.number_input(
-        "Monto a calcular:",
-        min_value=0.0,
-        key="monto_input",
-        step=5.0,
-        format="%.2f"
+# ==================== PESTAÑA DÓLARES ====================
+with tab_usd:
+    st.subheader("Calculadora USD / BS")
+    
+    modo_usd = st.radio(
+        "¿Qué deseas ingresar?",
+        ["Tengo Bolívares (Bs) ➔ Calcular $", "Tengo Dólares ($) ➔ Calcular Bs"],
+        key="modo_usd"
     )
-
-with col_btn:
-    st.write("") # Espaciador para alinear con el input
-    st.write("")
-    st.button("🧹 Limpiar", on_click=limpiar, use_container_width=True)
-
-st.write("---")
-
-# Lógica de conversión
-if opcion == "Dólares ($)":
-    bs_val = monto * tasa_dolar if tasa_dolar else 0
-    eur_val = (monto * tasa_dolar / tasa_euro) if (tasa_dolar and tasa_euro) else 0
     
-    st.success(f"**🇻🇪 En Bolívares:** `{bs_val:,.2f} Bs`")
-    st.info(f"**💶 Equivalente en Euros:** `{eur_val:,.2f} €`")
+    if "Tengo Bolívares" in modo_usd:
+        monto_bs = st.number_input("Monto en Bolívares (Bs):", min_value=0.0, value=100.0, step=50.0, key="usd_bs_input")
+        resultado_usd = monto_bs / tasa_dolar if tasa_dolar else 0
+        st.success(f"### 💵 Equivale a: `${resultado_usd:,.2f} USD`")
+    else:
+        monto_usd = st.number_input("Monto en Dólares ($):", min_value=0.0, value=10.0, step=5.0, key="usd_usd_input")
+        resultado_bs = monto_usd * tasa_dolar if tasa_dolar else 0
+        st.success(f"### 🇻🇪 Equivale a: `{resultado_bs:,.2f} Bs`")
 
-elif opcion == "Euros (€)":
-    bs_val = monto * tasa_euro if tasa_euro else 0
-    usd_val = (monto * tasa_euro / tasa_dolar) if (tasa_dolar and tasa_euro) else 0
+# ==================== PESTAÑA EUROS ====================
+with tab_eur:
+    st.subheader("Calculadora EUR / BS")
     
-    st.success(f"**🇻🇪 En Bolívares:** `{bs_val:,.2f} Bs`")
-    st.info(f"**💵 Equivalente en Dólares:** `{usd_val:,.2f} $`")
-
-else: # Bolívares (Bs)
-    usd_val = monto / tasa_dolar if tasa_dolar else 0
-    eur_val = monto / tasa_euro if tasa_euro else 0
+    modo_eur = st.radio(
+        "¿Qué deseas ingresar?",
+        ["Tengo Bolívares (Bs) ➔ Calcular €", "Tengo Euros (€) ➔ Calcular Bs"],
+        key="modo_eur"
+    )
     
-    st.success(f"**💵 En Dólares ($):** `{usd_val:,.2f} $`")
-    st.info(f"**💶 En Euros (€):** `{eur_val:,.2f} €`")
+    if "Tengo Bolívares" in modo_eur:
+        monto_bs_e = st.number_input("Monto en Bolívares (Bs):", min_value=0.0, value=100.0, step=50.0, key="eur_bs_input")
+        resultado_eur = monto_bs_e / tasa_euro if tasa_euro else 0
+        st.info(f"### 💶 Equivale a: `{resultado_eur:,.2f} €`")
+    else:
+        monto_eur = st.number_input("Monto en Euros (€):", min_value=0.0, value=10.0, step=5.0, key="eur_eur_input")
+        resultado_bs_e = monto_eur * tasa_euro if tasa_euro else 0
+        st.info(f"### 🇻🇪 Equivale a: `{resultado_bs_e:,.2f} Bs`")
 
-st.caption("💡 *Tip: Puedes presionar o mantener pulsado sobre el cuadro con borde de color para copiar el resultado directo al portapapeles.*")
+st.caption("💡 *Puedes copiar el resultado directamente manteniendo presionado el texto sobre el recuadro verde/azul.*")
