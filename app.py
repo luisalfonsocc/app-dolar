@@ -47,12 +47,12 @@ def fmt_ve(val):
 
 def boton_copiar_js(texto_solo_numero, key):
     html_code = f"""
-    <div style="display: flex; align-items: center; justify-content: center; height: 100%; padding-top: 2px;">
+    <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
         <button id="btn_{key}" onclick="copiar_{key}()" style="
             background-color: #F7FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 9px 12px;
+            border: 1px solid #CBD5E0;
+            border-radius: 8px;
+            padding: 8px 10px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
@@ -79,9 +79,9 @@ def boton_copiar_js(texto_solo_numero, key):
     }}
     </script>
     """
-    components.html(html_code, height=48)
+    components.html(html_code, height=42)
 
-# --- ESTILOS RESPONSIVOS PARA MÓVIL ---
+# --- ESTILOS CSS ---
 st.markdown("""
     <style>
     .stApp {
@@ -113,24 +113,11 @@ st.markdown("""
         color: #4A5568;
         margin-bottom: 15px;
     }
-    .calc-box {
-        background-color: #FAFAFA;
-        border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 16px 12px;
-        margin-bottom: 12px;
-    }
     .input-label {
         font-size: 0.9rem;
         font-weight: 700;
         color: #4A5568;
-        margin-bottom: 4px;
-    }
-    .formatted-preview {
-        font-size: 0.85rem;
-        color: #718096;
-        font-weight: 600;
-        margin-top: 2px;
+        margin-bottom: 2px;
     }
     div[data-testid="stRadio"] > div {
         justify-content: center;
@@ -182,8 +169,7 @@ st.write("")
 val_ext_actual = st.session_state.get("val_ext", 0.0)
 val_bs_actual = st.session_state.get("val_bs", 0.0)
 
-# BLOQUE MONEDA EXTRANJERA
-st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
+# CAMPO MONEDA EXTRANJERA
 st.markdown(f"<div class='input-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
 col_e_in, col_e_cp = st.columns([5, 1])
 with col_e_in:
@@ -195,14 +181,12 @@ with col_e_in:
         format="%.2f",
         label_visibility="collapsed"
     )
-    if val_ext_actual > 0:
-        st.markdown(f"<div class='formatted-preview'>Formato: {simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
 with col_e_cp:
     boton_copiar_js(fmt_ve(val_ext_actual), "ext")
-st.markdown("</div>", unsafe_allow_html=True)
 
-# BLOQUE BOLÍVARES
-st.markdown("<div class='calc-box'>", unsafe_allow_html=True)
+st.write("")
+
+# CAMPO BOLÍVARES
 st.markdown("<div class='input-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
 col_b_in, col_b_cp = st.columns([5, 1])
 with col_b_in:
@@ -214,11 +198,10 @@ with col_b_in:
         format="%.2f",
         label_visibility="collapsed"
     )
-    if val_bs_actual > 0:
-        st.markdown(f"<div class='formatted-preview'>Formato: {fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
 with col_b_cp:
     boton_copiar_js(fmt_ve(val_bs_actual), "bs")
-st.markdown("</div>", unsafe_allow_html=True)
+
+st.write("")
 
 # BOTÓN LIMPIAR
 st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, use_container_width=True)
@@ -227,11 +210,11 @@ st.write("---")
 
 # TABLA DE CAMBIOS RÁPIDOS
 st.subheader(f"📊 Tabla de Cambios Rápidos ({simbolo})")
-cantidades = [1, 5, 10, 15, 20, 30, 50, 100]
+cantidades = [1, 5, 10, 15, 20, 30, 35, 40, 45, 50, 100]
 df_tabla = pd.DataFrame({
     f"Monto ({simbolo})": [f"{simbolo}{c},00" for c in cantidades],
     "Equivalente en Bolívares (Bs)": [f"{fmt_ve(c * tasa_actual)} Bs" for c in cantidades]
 })
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v1.7.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v1.8.0</div>", unsafe_allow_html=True)
