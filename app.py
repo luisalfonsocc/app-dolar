@@ -58,7 +58,7 @@ def fmt_ve(val):
         return "0,00"
     return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-# --- ESTILOS CSS LIMPIOS ANTI-DARK MODE (SIN CAJAS FANTASMA) ---
+# --- ESTILOS CSS REFORZADOS ANTI-DARK MODE ---
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"], .stApp {
@@ -66,15 +66,10 @@ st.markdown("""
         color: #1A202C !important;
     }
 
-    /* Ocultar elementos vacios o contenedores HTML residuales */
-    .element-container:empty {
-        display: none !important;
-    }
-
     .brand-title {
         text-align: center;
         font-weight: 900;
-        font-size: 2.3rem;
+        font-size: 2.2rem;
         color: #0F172A !important;
         margin-bottom: 0px;
         letter-spacing: -0.5px;
@@ -122,17 +117,6 @@ st.markdown("""
         margin-bottom: 4px;
         margin-top: 10px;
     }
-    .preview-box {
-        background-color: #1E293B !important;
-        color: #FFFFFF !important;
-        font-size: 1.15rem;
-        font-weight: 800;
-        padding: 8px 14px;
-        border-radius: 8px;
-        margin-top: 6px;
-        margin-bottom: 12px;
-        display: inline-block;
-    }
     .usdt-ref-box {
         font-size: 0.88rem;
         color: #047857 !important;
@@ -145,7 +129,22 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Estilos para Tablas */
+    /* ESTILO FORZADO PARA BOTÓN LIMPIAR */
+    div[data-testid="stButton"] button {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        font-size: 1rem !important;
+        border-radius: 10px !important;
+        border: none !important;
+        padding: 10px 16px !important;
+    }
+    div[data-testid="stButton"] button p {
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+    }
+
+    /* ESTILOS DE TABLAS Y RADIO BUTTONS */
     div[data-testid="stTable"] table {
         color: #0F172A !important;
         background-color: #FFFFFF !important;
@@ -221,41 +220,29 @@ val_bs_actual = st.session_state.get("val_bs", 0.0)
 
 # BLOQUE MONEDA EXTRANJERA ($ / €)
 st.markdown(f"<div class='card-label'>Monto en {simbolo}</div>", unsafe_allow_html=True)
-col_e_in, col_e_cp = st.columns([4, 1])
-with col_e_in:
-    st.number_input(
-        f"Monto {simbolo}",
-        min_value=0.0,
-        key="val_ext",
-        on_change=update_from_ext,
-        format="%.2f",
-        label_visibility="collapsed"
-    )
-with col_e_cp:
-    if st.button("📋", key="btn_cp_ext", help="Copiar solo números"):
-        st.code(fmt_ve(val_ext_actual), language=None)
-
+st.number_input(
+    f"Monto {simbolo}",
+    min_value=0.0,
+    key="val_ext",
+    on_change=update_from_ext,
+    format="%.2f",
+    label_visibility="collapsed"
+)
 if val_ext_actual > 0:
-    st.markdown(f"<div class='preview-box'>{simbolo} {fmt_ve(val_ext_actual)}</div>", unsafe_allow_html=True)
+    st.code(fmt_ve(val_ext_actual), language=None)
 
 # BLOQUE BOLÍVARES (Bs)
 st.markdown("<div class='card-label'>Monto en Bolívares (Bs)</div>", unsafe_allow_html=True)
-col_b_in, col_b_cp = st.columns([4, 1])
-with col_b_in:
-    st.number_input(
-        "Monto Bs",
-        min_value=0.0,
-        key="val_bs",
-        on_change=update_from_bs,
-        format="%.2f",
-        label_visibility="collapsed"
-    )
-with col_b_cp:
-    if st.button("📋", key="btn_cp_bs", help="Copiar solo números"):
-        st.code(fmt_ve(val_bs_actual), language=None)
-
+st.number_input(
+    "Monto Bs",
+    min_value=0.0,
+    key="val_bs",
+    on_change=update_from_bs,
+    format="%.2f",
+    label_visibility="collapsed"
+)
 if val_bs_actual > 0:
-    st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
+    st.code(fmt_ve(val_bs_actual), language=None)
     
     # REFERENCIA EN USDT
     usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
@@ -268,7 +255,7 @@ if val_bs_actual > 0:
 
 st.write("")
 
-# BOTÓN LIMPIAR
+# BOTÓN LIMPIAR CON COLOR Y TEXTO VISIBLE
 st.button("🧹 Limpiar calculadora", key="btn_clean", on_click=limpiar_todo, use_container_width=True)
 
 st.write("---")
@@ -289,4 +276,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v3.0.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v3.1.0</div>", unsafe_allow_html=True)
