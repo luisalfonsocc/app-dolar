@@ -36,7 +36,7 @@ tasas = cargar_tasas()
 tasa_dolar = tasas.get("bcv_dolar", 0)
 tasa_euro = tasas.get("bcv_euro", 0)
 
-# Estilo personalizado para botones y tipografía móvil
+# Estilo personalizado
 st.markdown("""
     <style>
     .big-rate {
@@ -45,6 +45,12 @@ st.markdown("""
         color: #4A5568;
         text-align: center;
         margin-bottom: 10px;
+    }
+    .version-footer {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #A0AEC0;
+        margin-top: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -70,7 +76,7 @@ with tab_usd:
     if "Tengo Bolívares" in modo_usd:
         monto_bs = st.number_input("Monto en Bolívares (Bs):", min_value=0.0, value=100.0, step=50.0, key="usd_bs_input")
         resultado_usd = monto_bs / tasa_dolar if tasa_dolar else 0
-        st.success(f"### 💵 Equivale a: `${resultado_usd:,.2f} USD`")
+        st.success(f"### 💵 Equivale a: `{resultado_usd:,.2f} USD`")
     else:
         monto_usd = st.number_input("Monto en Dólares ($):", min_value=0.0, value=10.0, step=5.0, key="usd_usd_input")
         resultado_bs = monto_usd * tasa_dolar if tasa_dolar else 0
@@ -96,3 +102,6 @@ with tab_eur:
         st.info(f"### 🇻🇪 Equivale a: `{resultado_bs_e:,.2f} Bs`")
 
 st.caption("💡 *Puedes copiar el resultado directamente manteniendo presionado el texto sobre el recuadro verde/azul.*")
+
+# PIE DE PÁGINA CON VERSIÓN
+st.markdown("<div class='version-footer'>Versión v1.0.0</div>", unsafe_allow_html=True)
