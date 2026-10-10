@@ -91,7 +91,7 @@ st.markdown("""
         border: 1px solid #BFDBFE !important;
         border-radius: 8px;
         padding: 5px 12px;
-        margin: 4px auto 14px auto;
+        margin: 4px auto 10px auto;
         width: fit-content;
         font-weight: 700;
     }
@@ -100,7 +100,14 @@ st.markdown("""
         font-size: 0.95rem;
         font-weight: 700;
         color: #334155 !important;
-        margin-bottom: 20px;
+        margin-bottom: 4px;
+    }
+    .usdt-time-header {
+        text-align: center;
+        font-size: 0.78rem;
+        color: #047857 !important;
+        font-weight: 600;
+        margin-bottom: 18px;
     }
     .calc-card {
         background-color: #F8FAFC !important;
@@ -166,7 +173,7 @@ st.markdown("<div class='brand-title'>🤝 Cuentas<span>Claras</span> ⚡</div>"
 st.markdown("<div class='brand-tagline'>Calculadora Rápida • Sin Publicidad</div>", unsafe_allow_html=True)
 st.markdown(f"<div class='date-badge'>📅 Fecha Tasa BCV: <b>{fecha_valor}</b></div>", unsafe_allow_html=True)
 
-# TASAS SUPERIORES DESTACADAS
+# TASAS SUPERIORES DESTACADAS CON HORA DE USDT PERMANENTE
 st.markdown(
     f"<div class='big-rates'>"
     f"💵 USD: <b>{fmt_ve(tasa_dolar)} Bs</b> &nbsp;|&nbsp; "
@@ -175,6 +182,7 @@ st.markdown(
     f"</div>", 
     unsafe_allow_html=True
 )
+st.markdown(f"<div class='usdt-time-header'>🕒 Tasa USDT actualizada: <b>{usdt_fecha_hora}</b></div>", unsafe_allow_html=True)
 
 def reset_campos():
     st.session_state["val_ext"] = 0.0
@@ -253,12 +261,11 @@ with col_b_cp:
 if val_bs_actual > 0:
     st.markdown(f"<div class='preview-box'>{fmt_ve(val_bs_actual)} Bs</div>", unsafe_allow_html=True)
     
-    # REFERENCIA EN USDT CON FECHA Y HORA
+    # REFERENCIA EN USDT
     usdt_equiv = val_bs_actual / tasa_usdt if tasa_usdt else 0.0
     st.markdown(
         f"<div class='usdt-ref-box'>"
-        f"🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b><br>"
-        f"<small>Ref: {fmt_ve(tasa_usdt)} Bs/USDT (Actualizado: {usdt_fecha_hora})</small>"
+        f"🪙 Equivale a: <b>~{fmt_ve(usdt_equiv)} USDT</b> (Ref: {fmt_ve(tasa_usdt)} Bs/USDT)"
         f"</div>", 
         unsafe_allow_html=True
     )
@@ -286,4 +293,4 @@ df_tabla = pd.DataFrame({
 
 st.table(df_tabla)
 
-st.markdown("<div class='version-footer'>Versión v2.8.0</div>", unsafe_allow_html=True)
+st.markdown("<div class='version-footer'>Versión v2.9.0</div>", unsafe_allow_html=True)
